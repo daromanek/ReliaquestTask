@@ -1,3 +1,3 @@
-rootProject.name = 'rqChallenge'
+rootProject.name = 'java-employee-challenge'
 include 'server'
 include 'api'

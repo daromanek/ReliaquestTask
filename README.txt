@@ -1,0 +1,56 @@
+NOTES: 
+Use: gradlew spotlessApply to resolve any errors 
+Can get tasks by running gradlew api:tasksCan get dependencies by running gradlew api:dependencies
+
+TO DO:
+****Need my Controller to implement the interface - so need to deal with Employee Input (DTO??)
+
+Need to deal with rate limit requests that will randomly choose to be enforced in the mock service I am calling
+Trying to get LoggingAspectTest working......last thing I tried was to test for null coming into the LoggingAspect Constructoref
+
+
+
+DONE:(run gradlew in D:\ReliaQuestTask\java-employee-challenge)
+Not seeing whether tests pass or fail using gradlew api:test or gradlew api:bootstrap - gradlew test --tests "com.example.YourTestClass"
+Working on ApiApplicationTest unit Tests but getting error that: D:\ReliaQuestTask\java-employee-challenge\api\src\test\java\com\reliaquest\api\ApiApplicationTest.java:10: error: cannot find symbol @SpringBootTest when I run: gradlew api:bootstrap 
+- needed to add the correct import in the Test app: import org.springframework.boot.test.context.SpringBootTest;
+Created Controller, Service and Model classesGot Mock Employee API running by typing in gradlew server:bootstrap
+
+
+NOT DONE/WON'T DO IF CAN GET AROUND IT (FRUSTRATING WASTE OF TIME!!!! AND STILL DIDN'T LEARN WHAT"S WRONG WITH MY CONFIG)
+Haven't been able to get the gradle project imported into Eclipse and working correctly 
+- usually comes in without Project Facet set to Java (can manually set it) 
+- but also doesn't have gradle facet set and it's not in the list (which seems to be a broken configuration)
+- Could try converting it over to a maven build to get it working in Eclipse but it may be a waste of more time to do so while it can work on the command line from what I am seeing
+
+
+
+
+
+
+
+
+Added logging to the tests by modifying the project-conventions.gradle file's
+tasks.named('test') {
+    useJUnitPlatform()
+}
+to:
+tasks.named('test') {
+    useJUnitPlatform()
+    testLogging {
+        events "started", "passed", "skipped", "failed" // Show results for started, passed, skipped, and failed tests
+        exceptionFormat "full" // Show full stack trace for failed tests
+        showStandardStreams = true // Show standard output and error streams
+    }
+}
+
+Added TestLoggingAspect to show my knowledge of how to use Aspects.  Set this up just for the test classes.  
+Another could be added for the normal classes in a similar way.
+Added test to packages for all tests so that I could apply my TestLoggingAspect to only work on the test classes
+
+Created unit tests for each of the functional packages in the app
+
+ 
+
+
+

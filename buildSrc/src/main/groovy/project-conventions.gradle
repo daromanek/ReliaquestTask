@@ -17,6 +17,7 @@ repositories {
     mavenCentral()
 }
 
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -35,6 +36,11 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    testLogging {
+        events "started", "passed", "skipped", "failed" // Show results for started, passed, skipped, and failed tests
+        exceptionFormat "full" // Show full stack trace for failed tests
+        showStandardStreams = true // Show standard output and error streams
+    }
 }
 
 spotless {
