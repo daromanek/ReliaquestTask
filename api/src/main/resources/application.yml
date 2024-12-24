@@ -1,4 +1,16 @@
 spring.application.name: employee-api
 server.port: 8111
 
-app.logger.log-level: INFO
+app:
+  logger:
+    log-level: INFO
+  rest:
+      maxattempts: 3
+      timeout:
+        connect: 30
+        read: 30
+      backoff:
+        initialinterval: 1000
+        multiplier: 2
+        maxinterval: 10000
+

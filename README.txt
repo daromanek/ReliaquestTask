@@ -3,7 +3,7 @@ Use: gradlew spotlessApply to resolve any errors
 Can get tasks by running gradlew api:tasksCan get dependencies by running gradlew api:dependencies
 
 TO DO:
-****Need my Controller to implement the interface - so need to deal with Employee Input (DTO??)
+Separate the inner classes in RestTemplateConfig each into their own class file
 
 Need to deal with rate limit requests that will randomly choose to be enforced in the mock service I am calling
 Trying to get LoggingAspectTest working......last thing I tried was to test for null coming into the LoggingAspect Constructoref
@@ -11,6 +11,8 @@ Trying to get LoggingAspectTest working......last thing I tried was to test for 
 
 
 DONE:(run gradlew in D:\ReliaQuestTask\java-employee-challenge)
+Need to import RestTemplateConfig into this project
+Need my Controller to implement the interface - so need to deal with Employee Input (DTO??)
 Not seeing whether tests pass or fail using gradlew api:test or gradlew api:bootstrap - gradlew test --tests "com.example.YourTestClass"
 Working on ApiApplicationTest unit Tests but getting error that: D:\ReliaQuestTask\java-employee-challenge\api\src\test\java\com\reliaquest\api\ApiApplicationTest.java:10: error: cannot find symbol @SpringBootTest when I run: gradlew api:bootstrap 
 - needed to add the correct import in the Test app: import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +30,9 @@ Haven't been able to get the gradle project imported into Eclipse and working co
 
 
 
+
+
+I've followed standard Single Responsibility Principle/Separation of Concerns principles.
 
 
 Added logging to the tests by modifying the project-conventions.gradle file's
