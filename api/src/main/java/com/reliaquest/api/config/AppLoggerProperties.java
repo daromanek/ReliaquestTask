@@ -8,8 +8,7 @@ import org.springframework.context.annotation.Configuration;
 // application.yml files.
 @Configuration
 @ConfigurationProperties(
-        prefix = "app.logger") // The prefix 'app.logger' indicates that properties starting with this prefix will
-// be
+        prefix = "app.logger") // The prefix 'app.logger' indicates that properties starting with this prefix will be
 // mapped to this class.
 public class AppLoggerProperties {
 
