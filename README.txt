@@ -1,16 +1,28 @@
 NOTES: 
-Use: gradlew spotlessApply to resolve any errors 
+Use: gradlew spotlessApply to resolve any syntax errors
+gradlew api:clean
+gradlew api:build --info
+gradlew api:test --rerun-tasks 
+
 Can get tasks by running gradlew api:tasksCan get dependencies by running gradlew api:dependencies
 
+
 TO DO:
-Separate the inner classes in RestTemplateConfig each into their own class file
+Use model mapper to convert from MockEmployee to Employee
+
+Create integration tests to exercise the controller and service and try to get a rate limit failure
 
 Need to deal with rate limit requests that will randomly choose to be enforced in the mock service I am calling
+
+
+
 Trying to get LoggingAspectTest working......last thing I tried was to test for null coming into the LoggingAspect Constructoref
 
 
 
 DONE:(run gradlew in D:\ReliaQuestTask\java-employee-challenge)
+Introduce aspects for retry and error handling
+Separate the inner classes in RestTemplateConfig each into their own class file
 Need to import RestTemplateConfig into this project
 Need my Controller to implement the interface - so need to deal with Employee Input (DTO??)
 Not seeing whether tests pass or fail using gradlew api:test or gradlew api:bootstrap - gradlew test --tests "com.example.YourTestClass"
@@ -56,6 +68,13 @@ Added test to packages for all tests so that I could apply my TestLoggingAspect 
 Created unit tests for each of the functional packages in the app
 
  
+For scalability we could implement pagination on the MockEmployeeController.getEmployees() and MockEmployeeService.getMockEmployees() to support this then we could use pagination parameters in the EmployeeService's call to the MockEmployeeController'e endpoint
 
 
+Caching - used Spring's built in caching which did not allow for time based eviction, however, there are 3rd party solutions that do allow for this.  I've used HazelCast in the past where distributed caching, with advanced data types support, and with the option to persist the data for recovery.
+  I've also used MemCache when a lighterweight solution was adequate for the needs of the app as it doesn't support advanced date structures, persistence or discribution.
+  
+
+
+   
 
