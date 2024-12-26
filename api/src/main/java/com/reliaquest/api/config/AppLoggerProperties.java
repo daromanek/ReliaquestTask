@@ -1,4 +1,4 @@
-package com.reliaquest.api.config; // Package declaration for organizing related classes
+package com.reliaquest.api.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

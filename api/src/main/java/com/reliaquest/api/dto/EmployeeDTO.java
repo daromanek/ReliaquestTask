@@ -1,4 +1,4 @@
-package com.reliaquest.api.model;
+package com.reliaquest.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

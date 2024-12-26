@@ -1,7 +1,7 @@
 package com.reliaquest.api.controller;
 
+import com.reliaquest.api.dto.EmployeeDTO;
 import com.reliaquest.api.model.Employee;
-import com.reliaquest.api.model.EmployeeDTO;
 import com.reliaquest.api.service.EmployeeService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;

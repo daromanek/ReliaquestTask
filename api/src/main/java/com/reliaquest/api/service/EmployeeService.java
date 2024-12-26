@@ -1,10 +1,15 @@
 package com.reliaquest.api.service;
 
+import com.reliaquest.api.dto.CreateEmployeeResponse;
+import com.reliaquest.api.dto.DeleteEmployeeResponse;
+import com.reliaquest.api.dto.EmployeeDTO;
+import com.reliaquest.api.dto.GetAllEmployeesResponse;
+import com.reliaquest.api.dto.GetEmployeeResponse;
 import com.reliaquest.api.model.Employee;
-import com.reliaquest.api.model.EmployeeDTO;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,22 +22,28 @@ public class EmployeeService {
     private final String BASE_URL = "http://localhost:8112/api/v1/employee";
     private final RestTemplate restTemplate;
 
-    public EmployeeService() {
-        this.restTemplate = new RestTemplate();
+    // Constructor injection of RestTemplate
+    public EmployeeService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate; // Use the configured RestTemplate
     }
 
     // Method to retrieve all employees
     public List<Employee> getAllEmployees() {
-        ResponseEntity<Employee[]> response = restTemplate.getForEntity(BASE_URL, Employee[].class);
-        if (response.getStatusCode() == HttpStatus.OK) {
-            return List.of(response.getBody());
+        ResponseEntity<GetAllEmployeesResponse> response =
+                restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody().getData();
         }
-        return List.of();
+        return List.of(); // Return an empty list if the response is not OK
     }
 
     // Method to search employees by name
     public List<Employee> getEmployeesByNameSearch(String searchString) {
+        // Call the getAllEmployees method to retrieve all employees
         List<Employee> employees = getAllEmployees();
+
+        // Filter the employees based on the search string (case-insensitive)
         return employees.stream()
                 .filter(employee -> employee.getName().toLowerCase().contains(searchString.toLowerCase()))
                 .collect(Collectors.toList());
@@ -41,61 +52,67 @@ public class EmployeeService {
     // Method to retrieve an employee by ID
     public Employee getEmployeeById(String id) {
         try {
-            ResponseEntity<Employee> response = restTemplate.getForEntity(BASE_URL + "/" + id, Employee.class);
-            if (response.getStatusCode() == HttpStatus.OK) {
-                return response.getBody();
+            ResponseEntity<GetEmployeeResponse> response =
+                    restTemplate.getForEntity(BASE_URL + "/" + id, GetEmployeeResponse.class);
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                return response.getBody().getData(); // Return the Employee object
             }
         } catch (HttpClientErrorException e) {
             // Handle not found exception
             System.err.println("Employee not found: " + e.getMessage());
         }
-        return null;
+        return null; // Return null if the employee is not found or an error occurs
     }
 
     // Method to get the highest salary among employees
     public Integer getHighestSalaryOfEmployees() {
+        // Retrieve the list of all employees
         List<Employee> employees = getAllEmployees();
+
+        // Use a stream to find the maximum salary
         return employees.stream()
-                .map(Employee::getSalary)
-                .max(Integer::compare)
+                .map(Employee::getSalary) // Map to the salary of each employee
+                .max(Integer::compare) // Find the maximum salary
                 .orElse(0); // Return 0 if no employees found
     }
 
     // Method to get the top ten highest earning employee names
     public List<String> getTopTenHighestEarningEmployeeNames() {
+        // Retrieve the list of all employees
         List<Employee> employees = getAllEmployees();
+
+        // Use a stream to sort, limit, and collect the names of the top ten highest earners
         return employees.stream()
-                .sorted((e1, e2) -> e2.getSalary().compareTo(e1.getSalary())) // Sort in descending order
-                .limit(10) // Limit to top 10
-                .map(Employee::getName)
-                .collect(Collectors.toList());
+                .sorted((e1, e2) -> e2.getSalary().compareTo(e1.getSalary())) // Sort in descending order by salary
+                .limit(10) // Limit to the top 10 highest earners
+                .map(Employee::getName) // Map to employee names
+                .collect(Collectors.toList()); // Collect the names into a list
     }
 
     // Method to create a new employee
     public Employee createEmployee(EmployeeDTO employeeDTO) {
         HttpEntity<EmployeeDTO> requestEntity = new HttpEntity<>(employeeDTO);
-        ResponseEntity<EmployeeDTO> response = restTemplate.postForEntity(BASE_URL, requestEntity, EmployeeDTO.class);
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            employeeDTO = response.getBody();
-            Employee employee = new Employee();
-            //          employee.setId(employeeDTO.getId());
-            employee.setName(employeeDTO.getName());
-            employee.setTitle(employeeDTO.getTitle());
-            employee.setSalary(employeeDTO.getSalary());
-            employee.setAge(employeeDTO.getAge());
-            //          employee.setEmail() = employeeDTO.getEmail();
-            return employee;
+        ResponseEntity<CreateEmployeeResponse> response =
+                restTemplate.postForEntity(BASE_URL, requestEntity, CreateEmployeeResponse.class);
+
+        if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
+            return response.getBody().getData(); // Return the created Employee object
         }
         return null; // Return null if creation failed
     }
 
     // Method to delete an employee by ID
-    public void deleteEmployeeById(String id) {
+    public boolean deleteEmployeeById(String id) {
         try {
-            restTemplate.delete(BASE_URL + "/" + id);
+            ResponseEntity<DeleteEmployeeResponse> response =
+                    restTemplate.exchange(BASE_URL + "/" + id, HttpMethod.DELETE, null, DeleteEmployeeResponse.class);
+            return response.getStatusCode() == HttpStatus.OK
+                    && response.getBody() != null
+                    && response.getBody().isSuccess();
         } catch (HttpClientErrorException e) {
             // Handle not found exception
             System.err.println("Error deleting employee: " + e.getMessage());
+            return false; // Return false if deletion failed
         }
     }
 }
