@@ -8,15 +8,13 @@ Can get tasks by running gradlew api:tasksCan get dependencies by running gradle
 
 
 TO DO:
-Use model mapper to convert from MockEmployee to Employee
-
 Create integration tests to exercise the controller and service and try to get a rate limit failure
 
 Need to deal with rate limit requests that will randomly choose to be enforced in the mock service I am calling
 
+Get Retry and Error Handler Aspects integration tests in EmployeeServiceIntegrationTests working - commented out currently
 
 
-Trying to get LoggingAspectTest working......last thing I tried was to test for null coming into the LoggingAspect Constructoref
 
 
 

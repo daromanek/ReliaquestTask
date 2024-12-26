@@ -16,6 +16,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -25,10 +26,13 @@ public class EmployeeService {
     private final String BASE_URL = "http://localhost:8112/api/v1/employee";
     private final RestTemplate restTemplate;
     protected final AppLogger logger; // Logger instance for logging messages
+    private final RetryTemplate retryTemplate; // Inject RetryTemplate
 
     // Constructor injection of RestTemplate and AppLoggerProperties
-    public EmployeeService(RestTemplate restTemplate, AppLoggerProperties loggerProperties) {
+    public EmployeeService(
+            RestTemplate restTemplate, AppLoggerProperties loggerProperties, RetryTemplate retryTemplate) {
         this.restTemplate = restTemplate; // Use the configured RestTemplate
+        this.retryTemplate = retryTemplate; // Use the configured RestTemplate
         this.logger = new AppLogger(EmployeeService.class); // Create a new logger for this service
         // Set the log level based on the configuration property
         this.logger.setLogLevel(
@@ -42,17 +46,33 @@ public class EmployeeService {
     // endpoint
     @Cacheable(value = "employees")
     public List<Employee> getAllEmployees() {
-        logger.debug("Entering getAllEmployees method");
-        ResponseEntity<GetAllEmployeesResponse> response =
-                restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
+        return retryTemplate.execute(context -> {
+            try {
+                ResponseEntity<GetAllEmployeesResponse> response =
+                        restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
 
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            logger.debug("Exiting getAllEmployees method with success");
-            return response.getBody().getData();
-        }
-        logger.debug("Exiting getAllEmployees method with no employees found");
-        return List.of(); // Return an empty list if the response is not OK
+                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                    return response.getBody().getData(); // Return the list of employees
+                }
+            } catch (HttpClientErrorException e) {
+                // Log the error if needed
+                throw e; // Propagate the exception to allow retry
+            }
+            return null; // Return null if the response is not OK
+        });
     }
+    //    public List<Employee> getAllEmployees() {
+    //        logger.debug("Entering getAllEmployees method");
+    //        ResponseEntity<GetAllEmployeesResponse> response =
+    //                restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
+    //
+    //        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+    //            logger.debug("Exiting getAllEmployees method with success");
+    //            return response.getBody().getData();
+    //        }
+    //        logger.debug("Exiting getAllEmployees method with no employees found");
+    //        return List.of(); // Return an empty list if the response is not OK
+    //    }
 
     // Method to search employees by name
     public List<Employee> getEmployeesByNameSearch(String searchString) {

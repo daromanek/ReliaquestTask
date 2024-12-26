@@ -50,4 +50,9 @@ public class RetryTemplateConfig {
 
         return retryTemplate; // Return the configured RetryTemplate
     }
+
+    // Method to get the maximum number of attempts
+    public int getMaxAttempts() {
+        return maxAttempts;
+    }
 }
