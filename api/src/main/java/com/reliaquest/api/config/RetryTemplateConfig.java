@@ -1,5 +1,6 @@
 package com.reliaquest.api.config;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,9 +12,9 @@ import org.springframework.retry.support.RetryTemplate;
  * Configuration class for setting up a RetryTemplate.
  */
 @Configuration
+@Data
 public class RetryTemplateConfig {
 
-    // Injecting values from application.yml
     @Value("${app.rest.retry.maxattempts:3}") // Default to 3 if not set
     private int maxAttempts;
 
@@ -26,6 +27,9 @@ public class RetryTemplateConfig {
     @Value("${app.rest.retry.backoff.maxinterval:10000}") // Default to 10000 ms if not set
     private long maxInterval;
 
+    private SimpleRetryPolicy retryPolicy;
+    private ExponentialBackOffPolicy backOffPolicy;
+
     /**
      * Bean definition for RetryTemplate to handle retries for failed requests.
      *
@@ -33,26 +37,20 @@ public class RetryTemplateConfig {
      */
     @Bean
     public RetryTemplate retryTemplate() {
-        // Create a new RetryTemplate instance
         RetryTemplate retryTemplate = new RetryTemplate();
 
-        // Define a simple retry policy with a maximum number of attempts
-        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-        retryPolicy.setMaxAttempts(maxAttempts); // Set maximum attempts from yml
-        retryTemplate.setRetryPolicy(retryPolicy); // Set the retry policy
+        // Initialize and configure the retry policy
+        this.retryPolicy = new SimpleRetryPolicy();
+        this.retryPolicy.setMaxAttempts(maxAttempts);
+        retryTemplate.setRetryPolicy(this.retryPolicy);
 
-        // Define an exponential backoff policy for retries
-        ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(initialInterval); // Set initial wait time from yml
-        backOffPolicy.setMultiplier(multiplier); // Set exponential multiplier from yml
-        backOffPolicy.setMaxInterval(maxInterval); // Set maximum wait time from yml
-        retryTemplate.setBackOffPolicy(backOffPolicy); // Set the backoff policy
+        // Initialize and configure the backoff policy
+        this.backOffPolicy = new ExponentialBackOffPolicy();
+        this.backOffPolicy.setInitialInterval(initialInterval);
+        this.backOffPolicy.setMultiplier(multiplier);
+        this.backOffPolicy.setMaxInterval(maxInterval);
+        retryTemplate.setBackOffPolicy(this.backOffPolicy);
 
-        return retryTemplate; // Return the configured RetryTemplate
-    }
-
-    // Method to get the maximum number of attempts
-    public int getMaxAttempts() {
-        return maxAttempts;
+        return retryTemplate;
     }
 }

@@ -8,6 +8,8 @@ Can get tasks by running gradlew api:tasksCan get dependencies by running gradle
 
 
 TO DO:
+Create more unit tests for DTO tests
+
 Create integration tests to exercise the controller and service and try to get a rate limit failure
 
 Need to deal with rate limit requests that will randomly choose to be enforced in the mock service I am calling
