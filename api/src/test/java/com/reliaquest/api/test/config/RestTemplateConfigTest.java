@@ -25,6 +25,12 @@ class RestTemplateConfigTest {
     private RestTemplateBuilder restTemplateBuilder;
 
     @Mock
+    private CustomResponseErrorHandler errorHandler; // Mock for CustomResponseErrorHandler
+
+    @Mock
+    private LoggingInterceptor loggingInterceptor; // Mock for LoggingInterceptor
+
+    @Mock
     private RestTemplate restTemplate;
 
     @BeforeEach
@@ -42,14 +48,18 @@ class RestTemplateConfigTest {
     @Test
     void testRestTemplateBeanCreation() {
         // Act
-        RestTemplate result = restTemplateConfig.restTemplate(restTemplateBuilder);
+        RestTemplate result = restTemplateConfig.restTemplate(
+                restTemplateBuilder,
+                errorHandler,
+                loggingInterceptor); // Pass the error handler and logging interceptor
 
         // Assert
         assertNotNull(result);
         verify(restTemplateBuilder).setConnectTimeout(any(Duration.class));
         verify(restTemplateBuilder).setReadTimeout(any(Duration.class));
-        verify(restTemplateBuilder).additionalInterceptors(any(LoggingInterceptor.class));
-        verify(restTemplateBuilder).errorHandler(any(CustomResponseErrorHandler.class));
+        verify(restTemplateBuilder)
+                .additionalInterceptors(loggingInterceptor); // Verify the specific logging interceptor
+        verify(restTemplateBuilder).errorHandler(errorHandler); // Verify the specific error handler
         verify(restTemplateBuilder).build();
     }
 
@@ -60,7 +70,10 @@ class RestTemplateConfigTest {
         setPrivateField("connectTimeout", expectedConnectTimeout);
 
         // Act
-        restTemplateConfig.restTemplate(restTemplateBuilder);
+        restTemplateConfig.restTemplate(
+                restTemplateBuilder,
+                errorHandler,
+                loggingInterceptor); // Pass the error handler and logging interceptor
 
         // Assert
         verify(restTemplateBuilder).setConnectTimeout(Duration.ofSeconds(expectedConnectTimeout));
@@ -73,7 +86,10 @@ class RestTemplateConfigTest {
         setPrivateField("readTimeout", expectedReadTimeout);
 
         // Act
-        restTemplateConfig.restTemplate(restTemplateBuilder);
+        restTemplateConfig.restTemplate(
+                restTemplateBuilder,
+                errorHandler,
+                loggingInterceptor); // Pass the error handler and logging interceptor
 
         // Assert
         verify(restTemplateBuilder).setReadTimeout(Duration.ofSeconds(expectedReadTimeout));
@@ -82,25 +98,35 @@ class RestTemplateConfigTest {
     @Test
     void testLoggingInterceptorAdded() {
         // Act
-        restTemplateConfig.restTemplate(restTemplateBuilder);
+        restTemplateConfig.restTemplate(
+                restTemplateBuilder,
+                errorHandler,
+                loggingInterceptor); // Pass the error handler and logging interceptor
 
         // Assert
-        verify(restTemplateBuilder).additionalInterceptors(any(LoggingInterceptor.class));
+        verify(restTemplateBuilder)
+                .additionalInterceptors(loggingInterceptor); // Verify the specific logging interceptor
     }
 
     @Test
     void testCustomErrorHandlerAdded() {
         // Act
-        restTemplateConfig.restTemplate(restTemplateBuilder);
+        restTemplateConfig.restTemplate(
+                restTemplateBuilder,
+                errorHandler,
+                loggingInterceptor); // Pass the error handler and logging interceptor
 
         // Assert
-        verify(restTemplateBuilder).errorHandler(any(CustomResponseErrorHandler.class));
+        verify(restTemplateBuilder).errorHandler(errorHandler); // Verify the specific error handler
     }
 
     @Test
     void testLoggerInitialization() {
         // Act
-        RestTemplate result = restTemplateConfig.restTemplate(restTemplateBuilder);
+        RestTemplate result = restTemplateConfig.restTemplate(
+                restTemplateBuilder,
+                errorHandler,
+                loggingInterceptor); // Pass the error handler and logging interceptor
 
         // Assert
         assertNotNull(result);
@@ -113,7 +139,10 @@ class RestTemplateConfigTest {
         setPrivateField("readTimeout", 30);
 
         // Act
-        RestTemplate result = restTemplateConfig.restTemplate(restTemplateBuilder);
+        RestTemplate result = restTemplateConfig.restTemplate(
+                restTemplateBuilder,
+                errorHandler,
+                loggingInterceptor); // Pass the error handler and logging interceptor
 
         // Assert
         assertNotNull(result);

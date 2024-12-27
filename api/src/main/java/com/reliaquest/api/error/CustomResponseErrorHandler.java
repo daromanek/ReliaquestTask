@@ -1,66 +1,63 @@
 package com.reliaquest.api.error;
 
+import com.reliaquest.api.config.AppLoggerProperties;
 import com.reliaquest.api.logger.AppLogger;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResponseErrorHandler;
 
-/**
- * Custom error handler for handling HTTP response errors.
- */
+@Component
 public class CustomResponseErrorHandler implements ResponseErrorHandler {
 
-    // Logger instance for logging errors in this handler
-    private final AppLogger logger = new AppLogger(CustomResponseErrorHandler.class);
+    private final AppLogger logger;
 
-    /**
-     * Check if the response has an error based on its status code.
-     *
-     * @param response The ClientHttpResponse to check.
-     * @return true if the response indicates an error, false otherwise.
-     * @throws IOException if an I/O error occurs.
-     */
+    // Constructor to allow dependency injection of the AppLoggerProperties by Spring
+    @Autowired
+    public CustomResponseErrorHandler(AppLoggerProperties loggerProperties) {
+        this.logger = new AppLogger(CustomResponseErrorHandler.class); // Create a new logger for this handler
+        // Set the log level based on the configuration property
+        this.logger.setLogLevel(
+                AppLogger.LogLevel.valueOf(loggerProperties.getLogLevel().toUpperCase()));
+    }
+
+    // New constructor to allow injection of a mock logger for testing
+    public CustomResponseErrorHandler(AppLogger logger) {
+        this.logger = logger;
+    }
+
     @Override
     public boolean hasError(ClientHttpResponse response) throws IOException {
-        // Return true for 4xx and 5xx status codes
         return response.getStatusCode().is4xxClientError()
                 || response.getStatusCode().is5xxServerError();
     }
 
-    /**
-     * Handle the error response by logging the error details.
-     *
-     * @param response The ClientHttpResponse that contains the error.
-     * @throws IOException if an I/O error occurs.
-     */
     @Override
     public void handleError(ClientHttpResponse response) throws IOException {
-        // Create a context map to hold error details
         Map<String, Object> context = new HashMap<>();
         context.put("statusCode", response.getStatusCode());
         context.put("statusText", response.getStatusText());
 
-        // Get the status code as HttpStatusCode
         HttpStatusCode statusCode = response.getStatusCode();
 
-        // Use a standard switch statement
         switch (statusCode.value()) {
-            case 400: // BAD_REQUEST
+            case 400:
                 logger.error("Bad Request", context);
                 break;
-            case 401: // UNAUTHORIZED
+            case 401:
                 logger.error("Unauthorized", context);
                 break;
-            case 403: // FORBIDDEN
+            case 403:
                 logger.error("Forbidden", context);
                 break;
-            case 404: // NOT_FOUND
+            case 404:
                 logger.error("Not Found", context);
                 break;
-            case 500: // INTERNAL_SERVER_ERROR
+            case 500:
                 logger.error("Internal Server Error", context);
                 break;
             default:

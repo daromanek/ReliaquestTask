@@ -1,52 +1,58 @@
 package com.reliaquest.api.logger;
 
+import com.reliaquest.api.config.AppLoggerProperties;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.stereotype.Component;
 
 /**
  * Interceptor for logging request and response details.
  */
+@Component
 public class LoggingInterceptor implements ClientHttpRequestInterceptor {
 
     // Logger instance for logging requests and responses
-    private final AppLogger logger = new AppLogger(LoggingInterceptor.class);
+    private final AppLogger logger;
 
-    /**
-     * Intercept the HTTP request and log its details.
-     *
-     * @param request The HTTP request to intercept.
-     * @param body The request body.
-     * @param execution The request execution context.
-     * @return The ClientHttpResponse received from the execution.
-     * @throws IOException if an I/O error occurs.
-     */
+    // Constructor to allow dependency injection of the AppLoggerProperties by Spring
+    @Autowired
+    public LoggingInterceptor(AppLoggerProperties loggerProperties) {
+        this.logger = new AppLogger(LoggingInterceptor.class);
+        // Set the log level based on the configuration property
+        this.logger.setLogLevel(
+                AppLogger.LogLevel.valueOf(loggerProperties.getLogLevel().toUpperCase()));
+    }
+
+    // Constructor to be used by tests
+    public LoggingInterceptor(AppLogger logger) {
+        this.logger = logger;
+    }
+
     @Override
     public ClientHttpResponse intercept(
             org.springframework.http.HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
             throws IOException {
 
-        // Create a context map for the request details
         Map<String, Object> requestContext = new HashMap<>();
         requestContext.put("method", request.getMethod());
         requestContext.put("url", request.getURI());
         requestContext.put("headers", request.getHeaders());
-        logger.debug("Sending request", requestContext); // Log request details
-        logger.debug("Request body", Map.of("body", new String(body, StandardCharsets.UTF_8))); // Log request body
+        logger.debug("Sending request", requestContext);
+        logger.debug("Request body", Map.of("body", new String(body, StandardCharsets.UTF_8)));
 
-        // Execute the request and get the response
         ClientHttpResponse response = execution.execute(request, body);
 
-        // Create a context map for the response details
         Map<String, Object> responseContext = new HashMap<>();
         responseContext.put("statusCode", response.getStatusCode());
         responseContext.put("headers", response.getHeaders());
-        logger.debug("Received response", responseContext); // Log response details
+        logger.debug("Received response", responseContext);
 
-        return response; // Return the response
+        return response;
     }
 }

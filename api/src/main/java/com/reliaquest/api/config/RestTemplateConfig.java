@@ -33,18 +33,23 @@ public class RestTemplateConfig {
      * Bean definition for RestTemplate.
      *
      * @param builder RestTemplateBuilder used to create the RestTemplate instance.
+     * @param errorHandler CustomResponseErrorHandler bean for handling errors.
+     * @param loggingInterceptor LoggingInterceptor bean for logging requests and responses.
      * @return Configured RestTemplate instance.
      */
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    public RestTemplate restTemplate(
+            RestTemplateBuilder builder,
+            CustomResponseErrorHandler errorHandler,
+            LoggingInterceptor loggingInterceptor) {
         // Log the configuration process
         logger.debug("Configuring RestTemplate with timeouts");
 
         // Build and return a RestTemplate with custom settings
         return builder.setConnectTimeout(Duration.ofSeconds(connectTimeout)) // Set connection timeout
                 .setReadTimeout(Duration.ofSeconds(readTimeout)) // Set read timeout
-                .additionalInterceptors(new LoggingInterceptor()) // Add logging interceptor
-                .errorHandler(new CustomResponseErrorHandler()) // Add custom error handler
+                .additionalInterceptors(loggingInterceptor) // Add logging interceptor
+                .errorHandler(errorHandler) // Use the injected custom error handler
                 .build(); // Build the RestTemplate instance
     }
 }
