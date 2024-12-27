@@ -45,34 +45,49 @@ public class EmployeeService {
     //     then we could use pagination parameters in the EmployeeService's call to the MockEmployeeController'e
     // endpoint
     @Cacheable(value = "employees")
-    public List<Employee> getAllEmployees() {
-        return retryTemplate.execute(context -> {
-            try {
-                ResponseEntity<GetAllEmployeesResponse> response =
-                        restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
-
-                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                    return response.getBody().getData(); // Return the list of employees
-                }
-            } catch (HttpClientErrorException e) {
-                // Log the error if needed
-                throw e; // Propagate the exception to allow retry
-            }
-            return null; // Return null if the response is not OK
-        });
-    }
     //    public List<Employee> getAllEmployees() {
-    //        logger.debug("Entering getAllEmployees method");
-    //        ResponseEntity<GetAllEmployeesResponse> response =
-    //                restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
+    //        return retryTemplate.execute(context -> {
+    //            try {
+    //                ResponseEntity<GetAllEmployeesResponse> response =
+    //                        restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
     //
-    //        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-    //            logger.debug("Exiting getAllEmployees method with success");
-    //            return response.getBody().getData();
-    //        }
-    //        logger.debug("Exiting getAllEmployees method with no employees found");
-    //        return List.of(); // Return an empty list if the response is not OK
+    //                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+    //                    return response.getBody().getData(); // Return the list of employees
+    //                }
+    //            } catch (HttpClientErrorException e) {
+    //                // Log the error if needed
+    //                throw e; // Propagate the exception to allow retry
+    //            }
+    //            return null; // Return null if the response is not OK
+    //        });
     //    }
+    public List<Employee> getAllEmployees() {
+        logger.debug("Entering getAllEmployees method");
+        System.out.println(
+                "*******************************************************************************************");
+        System.out.println("*****************************Entered EmployeeService.getAllEmployees()");
+        System.out.println(
+                "*******************************************************************************************");
+        ResponseEntity<GetAllEmployeesResponse> response =
+                restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            logger.debug("Exiting getAllEmployees method with success");
+            System.out.println(
+                    "*******************************************************************************************");
+            System.out.println("*****************************Exiting EmployeeService.getAllEmployees()");
+            System.out.println(
+                    "*******************************************************************************************");
+            return response.getBody().getData();
+        }
+        logger.debug("Exiting getAllEmployees method with no employees found");
+        System.out.println(
+                "*******************************************************************************************");
+        System.out.println("*****************************Exiting EmployeeService.getAllEmployees() with no results");
+        System.out.println(
+                "*******************************************************************************************");
+        return List.of(); // Return an empty list if the response is not OK
+    }
 
     // Method to search employees by name
     public List<Employee> getEmployeesByNameSearch(String searchString) {

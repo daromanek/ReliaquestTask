@@ -23,10 +23,11 @@ public class RestTemplateConfig {
     private final AppLogger logger = new AppLogger(RestTemplateConfig.class);
 
     // Define connection and read timeouts
-    @Value("${app.rest.timeout.connect:30}") // Default to 30 seconds if not set
+    @Value("${app.rest.timeout.connect:10}") // Default to 10 seconds if not set as we want connects to fail quickly
     private long connectTimeout;
 
-    @Value("${app.rest.timeout.read:30}") // Default to 30 seconds if not set
+    @Value("${app.rest.timeout.read:120}") // Default to 120 seconds if not set as the max rate limit backoff period is
+    // 90 seconds so this will cover that successfully
     private long readTimeout;
 
     /**

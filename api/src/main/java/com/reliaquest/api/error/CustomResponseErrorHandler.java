@@ -16,16 +16,13 @@ public class CustomResponseErrorHandler implements ResponseErrorHandler {
 
     private final AppLogger logger;
 
-    // Constructor to allow dependency injection of the AppLoggerProperties by Spring
     @Autowired
     public CustomResponseErrorHandler(AppLoggerProperties loggerProperties) {
-        this.logger = new AppLogger(CustomResponseErrorHandler.class); // Create a new logger for this handler
-        // Set the log level based on the configuration property
+        this.logger = new AppLogger(CustomResponseErrorHandler.class);
         this.logger.setLogLevel(
                 AppLogger.LogLevel.valueOf(loggerProperties.getLogLevel().toUpperCase()));
     }
 
-    // New constructor to allow injection of a mock logger for testing
     public CustomResponseErrorHandler(AppLogger logger) {
         this.logger = logger;
     }
@@ -57,11 +54,67 @@ public class CustomResponseErrorHandler implements ResponseErrorHandler {
             case 404:
                 logger.error("Not Found", context);
                 break;
+            case 408:
+                logger.error("Request Timeout", context);
+                break;
+            case 429:
+                logger.error("Too Many Requests", context);
+                break;
             case 500:
                 logger.error("Internal Server Error", context);
                 break;
+            case 502:
+                logger.error("Bad Gateway", context);
+                break;
+            case 503:
+                logger.error("Service Unavailable", context);
+                break;
+            case 504:
+                logger.error("Gateway Timeout", context);
+                break;
             default:
                 logger.error("Response error occurred", context);
+        }
+    }
+
+    public void handleError(String responseBody, HttpStatusCode statusCode) throws IOException {
+        Map<String, Object> context = new HashMap<>();
+        context.put("statusCode", statusCode);
+        context.put("statusText", statusCode.getReasonPhrase());
+
+        switch (statusCode.value()) {
+            case 400:
+                logger.error("Bad Request: " + responseBody, context);
+                break;
+            case 401:
+                logger.error("Unauthorized: " + responseBody, context);
+                break;
+            case 403:
+                logger.error("Forbidden: " + responseBody, context);
+                break;
+            case 404:
+                logger.error("Not Found: " + responseBody, context);
+                break;
+            case 408:
+                logger.error("Request Timeout: " + responseBody, context);
+                break;
+            case 429:
+                logger.error("Too Many Requests: " + responseBody, context);
+                break;
+            case 500:
+                logger.error("Internal Server Error: " + responseBody, context);
+                break;
+            case 502:
+                logger.error("Bad Gateway: " + responseBody, context);
+                break;
+            case 503:
+                logger.error("Service Unavailable: " + responseBody, context);
+                break;
+            case 504:
+                logger.error("Gateway Timeout: " + responseBody, context);
+                break;
+            default:
+                logger.error("Response error occurred: " + responseBody, context);
         }
     }
 }

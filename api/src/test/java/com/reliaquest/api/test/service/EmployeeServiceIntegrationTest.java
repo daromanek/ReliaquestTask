@@ -1,4 +1,4 @@
-package com.reliaquest.api.service;
+package com.reliaquest.api.test.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,6 +10,7 @@ import com.reliaquest.api.dto.EmployeeDTO;
 import com.reliaquest.api.dto.GetAllEmployeesResponse;
 import com.reliaquest.api.dto.GetEmployeeResponse;
 import com.reliaquest.api.model.Employee;
+import com.reliaquest.api.service.EmployeeService;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -23,9 +24,12 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class EmployeeServiceIntegrationTest {
 
     @Autowired
@@ -158,88 +162,91 @@ public class EmployeeServiceIntegrationTest {
         assertTrue(result);
     }
 
-    //    @Test
-    //    public void testRetryAspect() {
-    //        // Arrange
-    //        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
-    //                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
-    //                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
-    //                .thenReturn(new ResponseEntity<>(new GetAllEmployeesResponse(), HttpStatus.OK));
-    //
-    //        // Act
-    //        List<Employee> employees = employeeService.getAllEmployees();
-    //
-    //        // Assert
-    //        assertNotNull(employees);
-    //        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(),
-    // eq(GetAllEmployeesResponse.class));
-    //    }
-    //
-    //    @Test
-    //    public void testDefaultThreeRetries() {
-    //        // Arrange
-    //        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
-    //                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-    //
-    //        // Act & Assert
-    //        assertThrows(HttpClientErrorException.class, () -> employeeService.getAllEmployees());
-    //        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(),
-    // eq(GetAllEmployeesResponse.class));
-    //    }
-    //
-    //    @Test
-    //    public void testNoFourthRetry() {
-    //        // Arrange
-    //        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
-    //                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-    //
-    //        // Act & Assert
-    //        assertThrows(HttpClientErrorException.class, () -> employeeService.getAllEmployees());
-    //        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(),
-    // eq(GetAllEmployeesResponse.class));
-    //    }
-    //
-    //    @Test
-    //    public void testErrorHandlingAspectForGetAllEmployees() {
-    //        // Arrange
-    //        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
-    //                .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
-    //
-    //        // Act
-    //        List<Employee> employees = employeeService.getAllEmployees();
-    //
-    //        // Assert
-    //        assertTrue(employees.isEmpty());
-    //    }
-    //
-    //    @Test
-    //    public void testErrorHandlingAspectForCreateEmployee() {
-    //        // Arrange
-    //        EmployeeDTO employeeDTO = new EmployeeDTO("John Doe", 50000, 30, "Developer");
-    //        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class),
-    // eq(CreateEmployeeResponse.class)))
-    //                .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
-    //
-    //        // Act
-    //        Employee result = employeeService.createEmployee(employeeDTO);
-    //
-    //        // Assert
-    //        assertNull(result);
-    //    }
-    //
-    //    @Test
-    //    public void testErrorHandlingAspectForDeleteEmployee() {
-    //        // Arrange
-    //        UUID employeeId = UUID.randomUUID();
-    //        when(restTemplate.exchange(any(String.class), eq(HttpMethod.DELETE), any(),
-    // eq(DeleteEmployeeResponse.class)))
-    //                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-    //
-    //        // Act
-    //        boolean result = employeeService.deleteEmployeeById(employeeId.toString());
-    //
-    //        // Assert
-    //        assertFalse(result);
-    //        // You can also verify that the logger captured the error if you have a way to check logs
-    //    }
+    @Test
+    public void testRetryAspect() {
+        // Arrange
+        Employee employee1 = new Employee(UUID.randomUUID(), "John Doe", 50000, 30, "Developer", "john@example.com");
+        Employee employee2 = new Employee(UUID.randomUUID(), "Jane Smith", 60000, 28, "Designer", "jane@example.com");
+
+        GetAllEmployeesResponse successfulResponse = new GetAllEmployeesResponse();
+        successfulResponse.setData(Arrays.asList(employee1, employee2)); // Set the data
+
+        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR)) // First attempt
+                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR)) // Second attempt
+                .thenReturn(new ResponseEntity<>(successfulResponse, HttpStatus.OK)); // Third attempt
+
+        // Act
+        List<Employee> employees = employeeService.getAllEmployees();
+
+        // Assert
+        assertNotNull(employees); // This should now pass
+        assertEquals(2, employees.size()); // Check if the correct number of employees is returned
+        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class));
+    }
+
+    @Test
+    public void testDefaultThreeRetries() {
+        // Arrange
+        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        // Act & Assert
+        assertThrows(HttpClientErrorException.class, () -> employeeService.getAllEmployees());
+        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class));
+    }
+
+    @Test
+    public void testNoFourthRetry() {
+        // Arrange
+        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+                .thenReturn(new ResponseEntity<>(new GetAllEmployeesResponse(), HttpStatus.OK));
+
+        // Act & Assert
+        assertThrows(HttpClientErrorException.class, () -> employeeService.getAllEmployees());
+        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class));
+    }
+
+    @Test
+    public void testErrorHandlingAspectForGetAllEmployees() {
+        // Arrange
+        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+        // Act
+        List<Employee> employees = employeeService.getAllEmployees();
+
+        // Assert
+        assertTrue(employees.isEmpty());
+    }
+
+    @Test
+    public void testErrorHandlingAspectForCreateEmployee() {
+        // Arrange
+        EmployeeDTO employeeDTO = new EmployeeDTO("John Doe", 50000, 30, "Developer");
+        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(CreateEmployeeResponse.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
+
+        // Act
+        Employee result = employeeService.createEmployee(employeeDTO);
+
+        // Assert
+        assertNull(result);
+    }
+
+    @Test
+    public void testErrorHandlingAspectForDeleteEmployee() {
+        // Arrange
+        UUID employeeId = UUID.randomUUID();
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.DELETE), any(), eq(DeleteEmployeeResponse.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        // Act
+        boolean result = employeeService.deleteEmployeeById(employeeId.toString());
+
+        // Assert
+        assertFalse(result);
+    }
 }

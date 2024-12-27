@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
@@ -15,41 +15,30 @@ import org.springframework.retry.support.RetryTemplate;
 @Data
 public class RetryTemplateConfig {
 
-    @Value("${app.rest.retry.maxattempts:3}") // Default to 3 if not set
+    // I went with the FixedBackOffPolicy as I didn't have time to create my own BackOffPolicy that would have allowed
+    // for an initial one or two quicker retries to handle non-rate limiting
+    //  errors while providing for intervals that were around 10ish seconds to avoid burdening the server when rate
+    // limiting is in effecct but still occuring often enough to get done asap
+    //  based on how long the rate limiting random interval was set to
+    @Value("${app.rest.retry.maxattempts:20}") // Default to 20 if not set
     private int maxAttempts;
 
-    @Value("${app.rest.retry.backoff.initialinterval:1000}") // Default to 1000 ms if not set
-    private long initialInterval;
+    @Value("${app.rest.retry.backoff.fixedinterval:5000}") // Fixed backoff interval of 5 seconds
+    private long fixedInterval;
 
-    @Value("${app.rest.retry.backoff.multiplier:2}") // Default to 2 if not set
-    private double multiplier;
-
-    @Value("${app.rest.retry.backoff.maxinterval:10000}") // Default to 10000 ms if not set
-    private long maxInterval;
-
-    private SimpleRetryPolicy retryPolicy;
-    private ExponentialBackOffPolicy backOffPolicy;
-
-    /**
-     * Bean definition for RetryTemplate to handle retries for failed requests.
-     *
-     * @return Configured RetryTemplate instance.
-     */
     @Bean
     public RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
 
         // Initialize and configure the retry policy
-        this.retryPolicy = new SimpleRetryPolicy();
-        this.retryPolicy.setMaxAttempts(maxAttempts);
-        retryTemplate.setRetryPolicy(this.retryPolicy);
+        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+        retryPolicy.setMaxAttempts(maxAttempts);
+        retryTemplate.setRetryPolicy(retryPolicy);
 
-        // Initialize and configure the backoff policy
-        this.backOffPolicy = new ExponentialBackOffPolicy();
-        this.backOffPolicy.setInitialInterval(initialInterval);
-        this.backOffPolicy.setMultiplier(multiplier);
-        this.backOffPolicy.setMaxInterval(maxInterval);
-        retryTemplate.setBackOffPolicy(this.backOffPolicy);
+        // Initialize and configure the fixed backoff policy
+        FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+        backOffPolicy.setBackOffPeriod(fixedInterval); // Set the fixed interval
+        retryTemplate.setBackOffPolicy(backOffPolicy);
 
         return retryTemplate;
     }

@@ -5,12 +5,10 @@ app:
   logger:
     log-level: INFO
   rest:
-      maxattempts: 3
+      maxattempts: 20
       timeout:
-        connect: 30
-        read: 30
+        connect: 10
+        read: 120
       backoff:
-        initialinterval: 1000
-        multiplier: 2
-        maxinterval: 10000
+        fixedinterval: 5000
 
