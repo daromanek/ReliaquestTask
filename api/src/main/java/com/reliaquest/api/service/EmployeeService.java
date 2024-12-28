@@ -41,16 +41,22 @@ public class EmployeeService {
 
     public List<Employee> getAllEmployees() {
         logger.debug("Entering getAllEmployees method");
-        ResponseEntity<GetAllEmployeesResponse> response =
-                restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
+        try {
+            ResponseEntity<GetAllEmployeesResponse> response =
+                    restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
 
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            logger.info("Exiting getAllEmployees method with success");
-            List<Employee> employees = response.getBody().getData();
-            return response.getBody().getData();
+            if (response.getStatusCode() == HttpStatus.OK
+                    && response.getBody() != null
+                    && response.getBody().getData() != null) {
+                logger.info("Exiting getAllEmployees method with success");
+                return response.getBody().getData();
+            }
+        } catch (HttpClientErrorException e) {
+            logger.error("Error fetching employees: " + e.getMessage(), e);
+            throw e; // Rethrow the exception to trigger retry logic
         }
         logger.info("Exiting getAllEmployees method with no employees found");
-        return List.of(); // Return an empty list if the response is not OK
+        return List.of(); // Return an empty list if the response is not OK or an error occurs
     }
 
     // Method to search employees by name
@@ -120,13 +126,13 @@ public class EmployeeService {
         // We are getting an incorrect response code of OK instead of CREATED so while it is incorrect I have corrected
         // for it on the api side
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            logger.info("Exiting createEmployee method with created employee:"
+            logger.info("Exiting createEmployee method with created employee: "
                     + response.getBody().getData());
             return response.getBody().getData(); // Return the created Employee object
         }
         logger.error(
                 "Failed to create employee. Status: " + response.getStatusCode() + ", Body: " + response.getBody());
-        return null; // Return null if creation failed
+        throw new HttpClientErrorException(response.getStatusCode()); // Throw an exception for error handling
     }
 
     // Method to delete an employee by ID
@@ -134,7 +140,7 @@ public class EmployeeService {
     // paramater which is the standard way of doing this
     @CacheEvict(value = "employees", allEntries = true) // Invalidate the cache
     public boolean deleteEmployeeById(String id) {
-        logger.error("Entering deleteEmployeeById method with id: " + id);
+        logger.debug("Entering deleteEmployeeById method with id: " + id);
 
         // Fetch all employees
         List<Employee> employees = getAllEmployees();
@@ -158,12 +164,16 @@ public class EmployeeService {
         ResponseEntity<DeleteEmployeeResponse> response = restTemplate.exchange(
                 BASE_URL, HttpMethod.DELETE, new HttpEntity<>(input), DeleteEmployeeResponse.class);
 
-        boolean success = response.getStatusCode() == HttpStatus.OK
-                && response.getBody() != null
-                && response.getBody().isSuccess();
+        if (response.getStatusCode() != HttpStatus.OK
+                || response.getBody() == null
+                || !response.getBody().isSuccess()) {
+            logger.error(
+                    "Failed to delete employee. Status: " + response.getStatusCode() + ", Body: " + response.getBody());
+            throw new HttpClientErrorException(response.getStatusCode()); // Throw an exception for error handling
+        }
 
-        logger.info("Exiting deleteEmployeeById method with success: " + success);
-        return success;
+        logger.debug("Exiting deleteEmployeeById method with success: true");
+        return true; // Return true if deletion was successful
     }
 
     // Method to manually enforce clearing of the cache....this is useful for tests but could be useful in other

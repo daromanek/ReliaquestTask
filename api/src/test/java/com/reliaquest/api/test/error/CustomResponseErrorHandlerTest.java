@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.HttpClientErrorException;
 
 class CustomResponseErrorHandlerTest {
 
@@ -135,11 +136,14 @@ class CustomResponseErrorHandlerTest {
         when(response.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
         when(response.getStatusText()).thenReturn("Internal Server Error");
 
-        // Act
-        errorHandler.handleError(response);
+        // Act & Assert
+        Exception exception = assertThrows(HttpClientErrorException.class, () -> {
+            errorHandler.handleError(response);
+        });
 
-        // Assert
+        // Verify that the logger was called with the correct message
         verify(logger).error(eq("Internal Server Error"), any(Map.class));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, ((HttpClientErrorException) exception).getStatusCode());
     }
 
     @Test
@@ -148,10 +152,13 @@ class CustomResponseErrorHandlerTest {
         when(response.getStatusCode()).thenReturn(HttpStatus.SERVICE_UNAVAILABLE);
         when(response.getStatusText()).thenReturn("Service Unavailable");
 
-        // Act
-        errorHandler.handleError(response);
+        // Act & Assert
+        Exception exception = assertThrows(HttpClientErrorException.class, () -> {
+            errorHandler.handleError(response);
+        });
 
-        // Assert
-        verify(logger).error(eq("Service Unavailable"), any(Map.class)); // Change this line
+        // Verify that the logger was called with the correct message
+        verify(logger).error(eq("Service Unavailable"), any(Map.class));
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ((HttpClientErrorException) exception).getStatusCode());
     }
 }
