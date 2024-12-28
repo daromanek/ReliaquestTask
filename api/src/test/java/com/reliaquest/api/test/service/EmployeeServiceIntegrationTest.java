@@ -193,60 +193,68 @@ public class EmployeeServiceIntegrationTest {
 
         // Act & Assert
         assertThrows(HttpClientErrorException.class, () -> employeeService.getAllEmployees());
-        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class));
+        verify(restTemplate, times(20)).exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class));
     }
 
     @Test
-    public void testNoFourthRetry() {
-        // Arrange
-        when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
-                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
-                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
-                .thenReturn(new ResponseEntity<>(new GetAllEmployeesResponse(), HttpStatus.OK));
-
-        // Act & Assert
-        assertThrows(HttpClientErrorException.class, () -> employeeService.getAllEmployees());
-        verify(restTemplate, times(3)).exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class));
-    }
-
-    @Test
-    public void testErrorHandlingAspectForGetAllEmployees() {
+    public void testRetryAndErrorHandlingAspectForGetAllEmployees() {
         // Arrange
         when(restTemplate.exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class)))
                 .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
-        // Act
-        List<Employee> employees = employeeService.getAllEmployees();
+        // Act and Assert
+        // We want to call the method which has the AOP aspects
+        assertThrows(HttpClientErrorException.class, () -> {
+            employeeService.getAllEmployees();
+        });
 
-        // Assert
-        assertTrue(employees.isEmpty());
+        // Verify that the method was retried the expected number of times
+        verify(restTemplate, times(20)).exchange(any(String.class), any(), any(), eq(GetAllEmployeesResponse.class));
     }
 
     @Test
-    public void testErrorHandlingAspectForCreateEmployee() {
+    public void testRetryAndErrorHandlingAspectForCreateEmployee() {
         // Arrange
         EmployeeDTO employeeDTO = new EmployeeDTO("John Doe", 50000, 30, "Developer");
-        when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(CreateEmployeeResponse.class)))
+
+        // Simulating bad request response
+        when(restTemplate.postForEntity(
+                        eq("http://localhost:8112/api/v1/employee"),
+                        any(HttpEntity.class),
+                        eq(CreateEmployeeResponse.class)))
                 .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
 
-        // Act
-        Employee result = employeeService.createEmployee(employeeDTO);
+        // Act and Assert
+        assertThrows(HttpClientErrorException.class, () -> {
+            // This should trigger the retry logic
+            employeeService.createEmployee(employeeDTO);
+        });
 
-        // Assert
-        assertNull(result);
+        // Verify that the method was retried the expected number of times
+        verify(restTemplate, times(20))
+                .postForEntity(any(String.class), any(HttpEntity.class), eq(CreateEmployeeResponse.class));
     }
 
     @Test
     public void testErrorHandlingAspectForDeleteEmployee() {
         // Arrange
-        UUID employeeId = UUID.randomUUID();
-        when(restTemplate.exchange(any(String.class), eq(HttpMethod.DELETE), any(), eq(DeleteEmployeeResponse.class)))
-                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+        String employeeId = UUID.randomUUID().toString(); // Generate a random UUID for the employee ID
+        when(restTemplate.exchange(
+                        eq("http://localhost:8112/api/v1/employee/" + employeeId), // Prepare for the specific endpoint
+                        eq(HttpMethod.DELETE),
+                        any(),
+                        eq(DeleteEmployeeResponse.class)))
+                .thenThrow(new HttpClientErrorException(
+                        HttpStatus.INTERNAL_SERVER_ERROR)); // Simulate an internal server error
 
-        // Act
-        boolean result = employeeService.deleteEmployeeById(employeeId.toString());
+        // Act and Assert
+        assertThrows(HttpClientErrorException.class, () -> {
+            // This should trigger the retry logic if it's implemented in EmployeeService
+            employeeService.deleteEmployeeById(employeeId); // Correctly reference the method
+        });
 
-        // Assert
-        assertFalse(result);
+        // Verify that the method was retried the expected number of times
+        verify(restTemplate, times(20))
+                .exchange(any(String.class), eq(HttpMethod.DELETE), any(), eq(DeleteEmployeeResponse.class));
     }
 }

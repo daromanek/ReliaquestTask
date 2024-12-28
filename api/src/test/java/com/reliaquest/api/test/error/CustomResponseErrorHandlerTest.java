@@ -152,6 +152,6 @@ class CustomResponseErrorHandlerTest {
         errorHandler.handleError(response);
 
         // Assert
-        verify(logger).error(eq("Response error occurred"), any(Map.class));
+        verify(logger).error(eq("Service Unavailable"), any(Map.class)); // Change this line
     }
 }

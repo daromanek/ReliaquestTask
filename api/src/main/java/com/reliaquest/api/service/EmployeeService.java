@@ -63,29 +63,17 @@ public class EmployeeService {
     //    }
     public List<Employee> getAllEmployees() {
         logger.debug("Entering getAllEmployees method");
-        System.out.println(
-                "*******************************************************************************************");
         System.out.println("*****************************Entered EmployeeService.getAllEmployees()");
-        System.out.println(
-                "*******************************************************************************************");
         ResponseEntity<GetAllEmployeesResponse> response =
                 restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             logger.debug("Exiting getAllEmployees method with success");
-            System.out.println(
-                    "*******************************************************************************************");
             System.out.println("*****************************Exiting EmployeeService.getAllEmployees()");
-            System.out.println(
-                    "*******************************************************************************************");
             return response.getBody().getData();
         }
         logger.debug("Exiting getAllEmployees method with no employees found");
-        System.out.println(
-                "*******************************************************************************************");
         System.out.println("*****************************Exiting EmployeeService.getAllEmployees() with no results");
-        System.out.println(
-                "*******************************************************************************************");
         return List.of(); // Return an empty list if the response is not OK
     }
 
@@ -165,17 +153,19 @@ public class EmployeeService {
     @CacheEvict(value = "employees", allEntries = true) // Invalidate the cache
     public boolean deleteEmployeeById(String id) {
         logger.debug("Entering deleteEmployeeById method with id: " + id);
-        try {
-            ResponseEntity<DeleteEmployeeResponse> response =
-                    restTemplate.exchange(BASE_URL + "/" + id, HttpMethod.DELETE, null, DeleteEmployeeResponse.class);
-            boolean success = response.getStatusCode() == HttpStatus.OK
-                    && response.getBody() != null
-                    && response.getBody().isSuccess();
-            logger.debug("Exiting deleteEmployeeById method with success: " + success);
-            return success;
-        } catch (HttpClientErrorException e) {
-            logger.error("Error deleting employee: " + e.getMessage(), e);
-            return false; // Return false if deletion failed
-        }
+        ResponseEntity<DeleteEmployeeResponse> response =
+                restTemplate.exchange(BASE_URL + "/" + id, HttpMethod.DELETE, null, DeleteEmployeeResponse.class);
+        boolean success = response.getStatusCode() == HttpStatus.OK
+                && response.getBody() != null
+                && response.getBody().isSuccess();
+        logger.debug("Exiting deleteEmployeeById method with success: " + success);
+        return success;
+    }
+
+    // Method to manually enforce clearing of the cache....this is useful for tests but could be useful in other
+    // scenarios as well
+    @CacheEvict(value = "employees", allEntries = true)
+    public void evictEmployeeCache() {
+        // This method can be empty; its purpose is to trigger the cache eviction
     }
 }

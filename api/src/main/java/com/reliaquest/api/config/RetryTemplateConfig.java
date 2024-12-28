@@ -26,20 +26,31 @@ public class RetryTemplateConfig {
     @Value("${app.rest.retry.backoff.fixedinterval:5000}") // Fixed backoff interval of 5 seconds
     private long fixedInterval;
 
+    private SimpleRetryPolicy retryPolicy;
+    private FixedBackOffPolicy backOffPolicy;
+
     @Bean
     public RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
 
         // Initialize and configure the retry policy
-        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+        retryPolicy = new SimpleRetryPolicy();
         retryPolicy.setMaxAttempts(maxAttempts);
         retryTemplate.setRetryPolicy(retryPolicy);
 
         // Initialize and configure the fixed backoff policy
-        FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+        backOffPolicy = new FixedBackOffPolicy();
         backOffPolicy.setBackOffPeriod(fixedInterval); // Set the fixed interval
         retryTemplate.setBackOffPolicy(backOffPolicy);
 
         return retryTemplate;
+    }
+
+    public SimpleRetryPolicy getRetryPolicy() {
+        return retryPolicy;
+    }
+
+    public FixedBackOffPolicy getBackOffPolicy() {
+        return backOffPolicy;
     }
 }

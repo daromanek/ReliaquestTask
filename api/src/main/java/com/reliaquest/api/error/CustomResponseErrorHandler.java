@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
@@ -80,7 +81,7 @@ public class CustomResponseErrorHandler implements ResponseErrorHandler {
     public void handleError(String responseBody, HttpStatusCode statusCode) throws IOException {
         Map<String, Object> context = new HashMap<>();
         context.put("statusCode", statusCode);
-        context.put("statusText", statusCode.getReasonPhrase());
+        context.put("statusText", HttpStatus.valueOf(statusCode.value()).getReasonPhrase());
 
         switch (statusCode.value()) {
             case 400:

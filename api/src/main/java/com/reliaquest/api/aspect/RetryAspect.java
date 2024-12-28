@@ -30,6 +30,10 @@ public class RetryAspect {
                     HttpClientErrorException clientError = (HttpClientErrorException) throwable;
                     if (clientError.getStatusCode().value() == 429) {
                         // Handle rate limiting
+                    	// For 429 error codes it is a standard practice to include a response header "Retry-After" instructing
+                    	//   the caller that they can try their call again after X seconds.  However, I know the server app in this
+                    	//   exercise did not include that header but I wanted to leave the code in to show how I would handle that
+                    	//   in the case where it was present
                         String retryAfterHeader =
                                 clientError.getResponseHeaders().getFirst("Retry-After");
                         if (retryAfterHeader != null) {
@@ -41,6 +45,11 @@ public class RetryAspect {
                             } catch (NumberFormatException ex) {
                                 // If parsing fails, we won't wait because we don't know how long to wait for
                             }
+                        } else {
+                        	// In retrospect I should probably have added a sleep here to make the retryTemplate wait
+                        	//   for 90 seconds, to handle the longest random BackOff time enforced at the server, before
+                        	//   it started retrying and then I would have set the BackoffPolicy on the RetryTemplate to 
+                        	//   be something much more reasonable for common retry scenarios.
                         }
 
                         // If this is the last retry attempt, throw the original exception

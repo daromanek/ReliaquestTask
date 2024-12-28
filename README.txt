@@ -10,6 +10,9 @@ Can get tasks by running gradlew api:tasksCan get dependencies by running gradle
 
 
 TO DO:
+Resolve any new compile errors
+Continue working on unit tests
+
 Get Retry and Error Handler Aspects integration tests in EmployeeServiceIntegrationTests working - commented out currently
 
 Create integration tests to exercise the service and try to get a rate limit failure

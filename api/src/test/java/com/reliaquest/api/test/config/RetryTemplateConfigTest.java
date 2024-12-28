@@ -21,10 +21,8 @@ class RetryTemplateConfigTest {
         MockitoAnnotations.openMocks(this);
         try {
             // Set default values directly
-            setPrivateField("maxAttempts", 3);
-            setPrivateField("initialInterval", 1000L);
-            setPrivateField("multiplier", 2.0);
-            setPrivateField("maxInterval", 10000L);
+            setPrivateField("maxAttempts", 20);
+            setPrivateField("fixedInterval", 5000L);
         } catch (Exception e) {
             fail("Failed to set up test: " + e.getMessage());
         }
@@ -45,34 +43,16 @@ class RetryTemplateConfigTest {
         retryTemplateConfig.retryTemplate();
 
         // Assert
-        assertEquals(3, retryTemplateConfig.getRetryPolicy().getMaxAttempts());
+        assertEquals(20, retryTemplateConfig.getRetryPolicy().getMaxAttempts());
     }
 
     @Test
-    void testInitialIntervalDefaultValue() {
+    void testFixedIntervalDefaultValue() {
         // Act
         retryTemplateConfig.retryTemplate();
 
         // Assert
-        assertEquals(1000, retryTemplateConfig.getBackOffPolicy().getInitialInterval());
-    }
-
-    @Test
-    void testMultiplierDefaultValue() {
-        // Act
-        retryTemplateConfig.retryTemplate();
-
-        // Assert
-        assertEquals(2, retryTemplateConfig.getBackOffPolicy().getMultiplier());
-    }
-
-    @Test
-    void testMaxIntervalDefaultValue() {
-        // Act
-        retryTemplateConfig.retryTemplate();
-
-        // Assert
-        assertEquals(10000, retryTemplateConfig.getBackOffPolicy().getMaxInterval());
+        assertEquals(5000, retryTemplateConfig.getBackOffPolicy().getBackOffPeriod());
     }
 
     @Test
@@ -90,37 +70,13 @@ class RetryTemplateConfigTest {
     @Test
     void testInitialIntervalValue() throws Exception {
         // Arrange
-        setPrivateField("initialInterval", 2000L);
+        setPrivateField("fixedInterval", 2000L);
 
         // Act
         retryTemplateConfig.retryTemplate();
 
         // Assert
-        assertEquals(2000, retryTemplateConfig.getBackOffPolicy().getInitialInterval());
-    }
-
-    @Test
-    void testMultiplierValue() throws Exception {
-        // Arrange
-        setPrivateField("multiplier", 3.0);
-
-        // Act
-        retryTemplateConfig.retryTemplate();
-
-        // Assert
-        assertEquals(3, retryTemplateConfig.getBackOffPolicy().getMultiplier());
-    }
-
-    @Test
-    void testMaxIntervalValue() throws Exception {
-        // Arrange
-        setPrivateField("maxInterval", 15000L);
-
-        // Act
-        retryTemplateConfig.retryTemplate();
-
-        // Assert
-        assertEquals(15000, retryTemplateConfig.getBackOffPolicy().getMaxInterval());
+        assertEquals(2000, retryTemplateConfig.getBackOffPolicy().getBackOffPeriod());
     }
 
     private void setPrivateField(String fieldName, Object value) throws Exception {
