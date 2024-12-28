@@ -3,6 +3,7 @@ package com.reliaquest.api.service;
 import com.reliaquest.api.config.AppLoggerProperties;
 import com.reliaquest.api.dto.CreateEmployeeResponse;
 import com.reliaquest.api.dto.DeleteEmployeeResponse;
+import com.reliaquest.api.dto.DeleteMockEmployeeInput;
 import com.reliaquest.api.dto.EmployeeDTO;
 import com.reliaquest.api.dto.GetAllEmployeesResponse;
 import com.reliaquest.api.dto.GetEmployeeResponse;
@@ -11,7 +12,6 @@ import com.reliaquest.api.model.Employee;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -39,51 +39,30 @@ public class EmployeeService {
                 AppLogger.LogLevel.valueOf(loggerProperties.getLogLevel().toUpperCase()));
     }
 
-    // Method to retrieve all employees
-    // For scalability we could implement pagination on the MockEmployeeController.getEmployees() and
-    // MockEmployeeService.getMockEmployees() to support this
-    //     then we could use pagination parameters in the EmployeeService's call to the MockEmployeeController'e
-    // endpoint
-    @Cacheable(value = "employees")
-    //    public List<Employee> getAllEmployees() {
-    //        return retryTemplate.execute(context -> {
-    //            try {
-    //                ResponseEntity<GetAllEmployeesResponse> response =
-    //                        restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
-    //
-    //                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-    //                    return response.getBody().getData(); // Return the list of employees
-    //                }
-    //            } catch (HttpClientErrorException e) {
-    //                // Log the error if needed
-    //                throw e; // Propagate the exception to allow retry
-    //            }
-    //            return null; // Return null if the response is not OK
-    //        });
-    //    }
     public List<Employee> getAllEmployees() {
         logger.debug("Entering getAllEmployees method");
         ResponseEntity<GetAllEmployeesResponse> response =
                 restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            logger.debug("Exiting getAllEmployees method with success");
+            logger.info("Exiting getAllEmployees method with success");
+            List<Employee> employees = response.getBody().getData();
             return response.getBody().getData();
         }
-        logger.debug("Exiting getAllEmployees method with no employees found");
+        logger.info("Exiting getAllEmployees method with no employees found");
         return List.of(); // Return an empty list if the response is not OK
     }
 
     // Method to search employees by name
     public List<Employee> getEmployeesByNameSearch(String searchString) {
-        logger.debug("Entering getEmployeesByNameSearch method with searchString: " + searchString);
+        logger.info("Entering getEmployeesByNameSearch method with searchString: " + searchString);
         List<Employee> employees = getAllEmployees();
 
         List<Employee> filteredEmployees = employees.stream()
                 .filter(employee -> employee.getName().toLowerCase().contains(searchString.toLowerCase()))
                 .collect(Collectors.toList());
 
-        logger.debug("Exiting getEmployeesByNameSearch method with results: " + filteredEmployees.size());
+        logger.info("Exiting getEmployeesByNameSearch method with results: " + filteredEmployees);
         return filteredEmployees;
     }
 
@@ -94,13 +73,13 @@ public class EmployeeService {
             ResponseEntity<GetEmployeeResponse> response =
                     restTemplate.getForEntity(BASE_URL + "/" + id, GetEmployeeResponse.class);
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                logger.debug("Exiting getEmployeeById method with success");
+                logger.info("Exiting getEmployeeById method with success");
                 return response.getBody().getData(); // Return the Employee object
             }
         } catch (HttpClientErrorException e) {
             logger.error("Employee not found: {}" + e.getMessage(), e);
         }
-        logger.debug("Exiting getEmployeeById method with no employee found");
+        logger.info("Exiting getEmployeeById method with no employee found");
         return null; // Return null if the employee is not found or an error occurs
     }
 
@@ -112,7 +91,7 @@ public class EmployeeService {
                 .map(Employee::getSalary)
                 .max(Integer::compare)
                 .orElse(0); // Return 0 if no employees found
-        logger.debug("Exiting getHighestSalaryOfEmployees method with highest salary: " + highestSalary);
+        logger.info("Exiting getHighestSalaryOfEmployees method with highest salary: " + highestSalary);
         return highestSalary;
     }
 
@@ -125,7 +104,7 @@ public class EmployeeService {
                 .limit(10)
                 .map(Employee::getName)
                 .collect(Collectors.toList());
-        logger.debug("Exiting getTopTenHighestEarningEmployeeNames method with # of names: " + topTenNames.size());
+        logger.info("Exiting getTopTenHighestEarningEmployeeNames method with # of names: " + topTenNames);
         return topTenNames;
     }
 
@@ -134,28 +113,56 @@ public class EmployeeService {
     public Employee createEmployee(EmployeeDTO employeeDTO) {
         logger.debug("Entering createEmployee method with employeeDTO: " + employeeDTO);
         HttpEntity<EmployeeDTO> requestEntity = new HttpEntity<>(employeeDTO);
+        logger.debug("CreateEmployee requestEntity: " + requestEntity);
         ResponseEntity<CreateEmployeeResponse> response =
                 restTemplate.postForEntity(BASE_URL, requestEntity, CreateEmployeeResponse.class);
 
-        if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
-            logger.debug("Exiting createEmployee method with created employee:"
+        // We are getting an incorrect response code of OK instead of CREATED so while it is incorrect I have corrected
+        // for it on the api side
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            logger.info("Exiting createEmployee method with created employee:"
                     + response.getBody().getData());
             return response.getBody().getData(); // Return the created Employee object
         }
-        logger.error("Failed to create employee");
+        logger.error(
+                "Failed to create employee. Status: " + response.getStatusCode() + ", Body: " + response.getBody());
         return null; // Return null if creation failed
     }
 
     // Method to delete an employee by ID
+    // Sent in the employee id in the request body to match the MockEmployeeController rather than as a request
+    // paramater which is the standard way of doing this
     @CacheEvict(value = "employees", allEntries = true) // Invalidate the cache
     public boolean deleteEmployeeById(String id) {
-        logger.debug("Entering deleteEmployeeById method with id: " + id);
-        ResponseEntity<DeleteEmployeeResponse> response =
-                restTemplate.exchange(BASE_URL + "/" + id, HttpMethod.DELETE, null, DeleteEmployeeResponse.class);
+        logger.error("Entering deleteEmployeeById method with id: " + id);
+
+        // Fetch all employees
+        List<Employee> employees = getAllEmployees();
+
+        // Find the employee by ID
+        Employee employeeToDelete = employees.stream()
+                .filter(employee -> employee.getId().toString().equals(id)) // Assuming ID is a UUID
+                .findFirst()
+                .orElse(null);
+
+        if (employeeToDelete == null) {
+            logger.error("Employee with ID " + id + " not found.");
+            return false; // Employee not found, handle as needed
+        }
+
+        // Create the input DTO for deletion
+        DeleteMockEmployeeInput input = new DeleteMockEmployeeInput();
+        input.setName(employeeToDelete.getName()); // Set the name in the DTO
+
+        // Call the MockEmployeeController's delete endpoint
+        ResponseEntity<DeleteEmployeeResponse> response = restTemplate.exchange(
+                BASE_URL, HttpMethod.DELETE, new HttpEntity<>(input), DeleteEmployeeResponse.class);
+
         boolean success = response.getStatusCode() == HttpStatus.OK
                 && response.getBody() != null
                 && response.getBody().isSuccess();
-        logger.debug("Exiting deleteEmployeeById method with success: " + success);
+
+        logger.info("Exiting deleteEmployeeById method with success: " + success);
         return success;
     }
 

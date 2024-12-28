@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResponseErrorHandler;
 
 @Component
@@ -45,36 +46,48 @@ public class CustomResponseErrorHandler implements ResponseErrorHandler {
         switch (statusCode.value()) {
             case 400:
                 logger.error("Bad Request", context);
+                // Do not throw an exception; do not retry
                 break;
             case 401:
                 logger.error("Unauthorized", context);
+                // Do not throw an exception; do not retry
                 break;
             case 403:
                 logger.error("Forbidden", context);
+                // Do not throw an exception; do not retry
                 break;
             case 404:
                 logger.error("Not Found", context);
+                // Do not throw an exception; do not retry
                 break;
             case 408:
                 logger.error("Request Timeout", context);
-                break;
+                // Consider throwing an exception if you want to retry
+                throw new HttpClientErrorException(statusCode);
             case 429:
                 logger.error("Too Many Requests", context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 500:
                 logger.error("Internal Server Error", context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 502:
                 logger.error("Bad Gateway", context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 503:
                 logger.error("Service Unavailable", context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 504:
                 logger.error("Gateway Timeout", context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             default:
-                logger.error("Response error occurred", context);
+                logger.error("Response error occurred: ", context);
+                // Do not throw an exception; do not retry
+                break;
         }
     }
 
@@ -86,36 +99,48 @@ public class CustomResponseErrorHandler implements ResponseErrorHandler {
         switch (statusCode.value()) {
             case 400:
                 logger.error("Bad Request: " + responseBody, context);
+                // Do not throw an exception; do not retry
                 break;
             case 401:
                 logger.error("Unauthorized: " + responseBody, context);
+                // Do not throw an exception; do not retry
                 break;
             case 403:
                 logger.error("Forbidden: " + responseBody, context);
+                // Do not throw an exception; do not retry
                 break;
             case 404:
                 logger.error("Not Found: " + responseBody, context);
+                // Do not throw an exception; do not retry
                 break;
             case 408:
                 logger.error("Request Timeout: " + responseBody, context);
-                break;
+                // Consider throwing an exception if you want to retry
+                throw new HttpClientErrorException(statusCode);
             case 429:
                 logger.error("Too Many Requests: " + responseBody, context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 500:
                 logger.error("Internal Server Error: " + responseBody, context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 502:
                 logger.error("Bad Gateway: " + responseBody, context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 503:
                 logger.error("Service Unavailable: " + responseBody, context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             case 504:
                 logger.error("Gateway Timeout: " + responseBody, context);
-                break;
+                // Throw an exception to trigger the retry logic
+                throw new HttpClientErrorException(statusCode);
             default:
                 logger.error("Response error occurred: " + responseBody, context);
+                // Do not throw an exception; do not retry
+                break;
         }
     }
 }

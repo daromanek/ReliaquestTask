@@ -3,7 +3,7 @@ server.port: 8111
 
 app:
   logger:
-    log-level: INFO
+    log-level: DEBUG
   rest:
       maxattempts: 20
       timeout:

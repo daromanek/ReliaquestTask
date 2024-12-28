@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/v1/employee")
 public class EmployeeController implements IEmployeeController<Employee, EmployeeDTO> {
 
     private final EmployeeService employeeService;

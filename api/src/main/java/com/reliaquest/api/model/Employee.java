@@ -1,5 +1,7 @@
 package com.reliaquest.api.model;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Builder(toBuilder = true)
+@JsonNaming(Employee.PrefixNamingStrategy.class) // Using the same naming strategy
 public class Employee {
 
     private UUID id;
@@ -28,5 +31,18 @@ public class Employee {
         this.age = age;
         this.title = title;
         this.email = email;
+    }
+
+    // Added the same prefix naming strategy as the MockEmployee has so that we can convert to an Employee in the
+    // response
+    static class PrefixNamingStrategy extends PropertyNamingStrategies.NamingBase {
+
+        @Override
+        public String translate(String propertyName) {
+            if ("id".equals(propertyName)) {
+                return propertyName;
+            }
+            return "employee_" + propertyName;
+        }
     }
 }
