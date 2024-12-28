@@ -10,23 +10,19 @@ Can get tasks by running gradlew api:tasksCan get dependencies by running gradle
 
 
 TO DO:
-Resolve any new compile errors
-Continue working on unit tests
-
-Get Retry and Error Handler Aspects integration tests in EmployeeServiceIntegrationTests working - commented out currently
-
-Create integration tests to exercise the service and try to get a rate limit failure
-Create integration tests to exercise the controller and try to get a rate limit failure
-
 Log to file as well as console
-Add AppLoggerProperties to RestTemplateConfig
-
 Apply more comments to my code if time
 
 
 
 
 DONE:(run gradlew in D:\ReliaQuestTask\java-employee-challenge)
+Get Retry and Error Handler Aspects integration tests in EmployeeServiceIntegrationTests working - commented out currently
+Create integration tests to exercise the service and try to get a rate limit failure
+Create integration tests to exercise the controller and try to get a rate limit failure
+Continue working on unit tests
+Add AppLoggerProperties to RestTemplateConfig
+Resolve any new compile errors
 Increase timeouts on RestTemplate to 100 seconds being the max backoff time in the server will be 90 seconds
 Deal with Rate Limiting max backoff period of 90 seconds
 Need to deal with rate limit requests that will randomly choose to be enforced in the mock service I am calling
@@ -53,43 +49,5 @@ Haven't been able to get the gradle project imported into Eclipse and working co
 
 
 
-
-
-I've followed standard Single Responsibility Principle/Separation of Concerns principles.
-
-
-Added logging to the tests by modifying the project-conventions.gradle file's
-tasks.named('test') {
-    useJUnitPlatform()
-}
-to:
-tasks.named('test') {
-    useJUnitPlatform()
-    testLogging {
-        events "started", "passed", "skipped", "failed" // Show results for started, passed, skipped, and failed tests
-        exceptionFormat "full" // Show full stack trace for failed tests
-        showStandardStreams = true // Show standard output and error streams
-    }
-}
-
-Added TestLoggingAspect to show my knowledge of how to use Aspects.  Set this up just for the test classes.  
-Another could be added for the normal classes in a similar way.
-Added test to packages for all tests so that I could apply my TestLoggingAspect to only work on the test classes
-
-Created unit tests for each of the functional packages in the app
-
- 
-For scalability we could implement pagination on the MockEmployeeController.getEmployees() and MockEmployeeService.getMockEmployees() to support this then we could use pagination parameters in the EmployeeService's call to the MockEmployeeController'e endpoint
-
-
-Caching - used Spring's built in caching which did not allow for time based eviction, however, there are 3rd party solutions that do allow for this.  I've used HazelCast in the past where distributed caching, with advanced data types support, and with the option to persist the data for recovery.
-  I've also used MemCache when a lighterweight solution was adequate for the needs of the app as it doesn't support advanced date structures, persistence or discribution.
-  
-
-I've honored the Retry-After header if one is provided for a Rate Limiting status code response, otherwise, i just stick with the standard 
-   
-
-Went with FixedBackOffPolicy that would go to more then 90 seconds to deal with worst possible backoff time generated on the server.  Updated RestTemplate ReadTimeout to 120 seconds for same reason.
-I went with the FixedBackOffPolicy as I didn't have time to create my own BackOffPolicy
 
 

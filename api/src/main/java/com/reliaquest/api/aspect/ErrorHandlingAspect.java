@@ -30,8 +30,6 @@ public class ErrorHandlingAspect {
 
                 if (statusCode.value() == 429) {
                     // Handle 429 Too Many Requests
-                    System.out.println("Rate limit exceeded. Please try again later.");
-                    // Implement backoff strategy or logging as needed
                 } else {
                     errorHandler.handleError(clientError.getResponseBodyAsString(), statusCode);
                 }

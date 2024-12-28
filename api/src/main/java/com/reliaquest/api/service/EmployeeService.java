@@ -63,17 +63,14 @@ public class EmployeeService {
     //    }
     public List<Employee> getAllEmployees() {
         logger.debug("Entering getAllEmployees method");
-        System.out.println("*****************************Entered EmployeeService.getAllEmployees()");
         ResponseEntity<GetAllEmployeesResponse> response =
                 restTemplate.exchange(BASE_URL, HttpMethod.GET, null, GetAllEmployeesResponse.class);
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             logger.debug("Exiting getAllEmployees method with success");
-            System.out.println("*****************************Exiting EmployeeService.getAllEmployees()");
             return response.getBody().getData();
         }
         logger.debug("Exiting getAllEmployees method with no employees found");
-        System.out.println("*****************************Exiting EmployeeService.getAllEmployees() with no results");
         return List.of(); // Return an empty list if the response is not OK
     }
 
